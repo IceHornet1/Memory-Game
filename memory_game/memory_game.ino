@@ -1,27 +1,74 @@
+/********************************************************************
+*
+*   Memory-Game V1.0
+*   Florian Ulmschneider
+*   18.01.2015
+*
+********************************************************************/
 
 
+//#include <Entropy.h>
+#include <avr/power.h>
 
+int turn = 0;
 
 byte randomArray[100];
 byte inputArray[100];
 
+byte prevInput;
+byte input;
+
 void setup() {
-  randomSeed(analogRead(2));
+  //Entropy.initialize();
+  
+  power_adc_disable();
+  power_usi_disable();
+ 
+  disableInputs();
   
   swipe(80);
   
-  for(int x = 0; x<20; x++) {
-  
-    show(x);
-    delay(500);
+  while(1) {
+    
+    //generate, display and store a random sequence
+    for(int i = 0; i <= turn; i++) {
+      randomArray[i] = random(4);
+      digitalWrite(randomArray[i],0);
+      delay(500);
+      digitalWrite(randomArray[i],1);
+      delay(100);
+    }
+    
+    delay(300);
+    
+    //blink to indicate players turn
+    blink(200);
+    
+    //look for buttonpresses and store them
+    enableInputs();
+    for(int i = 0; i <= turn; i++) {
+      inputArray[i] = buttonPressed();
+      delay(100);
+    }
+    disableInputs();
+    
+    //compare required and actual sequence  
+    for(int i = 0; i < turn; i++) {
+      if(randomArray[i] != inputArray[i]) {
+        goto gameover;
+      }
+    }
+    turn++;
+    swipe(80);
   }
   
+  gameover:
+  
+  //display the score in binary  
   blink(200);
   delay(100);
   blink(200);
-  
-  DDRB = 0xf0;
-  PORTB = 0xff;
+  show(turn);
 }
 
 
@@ -30,7 +77,8 @@ void loop() {
 }
 
 void swipe(int del) {
-  DDRB = 0xff;
+
+  //lights up the leds from left to right
   
   PORTB = 0b00001111;
   delay(del);
@@ -53,26 +101,70 @@ void swipe(int del) {
 }
 
 void blink(int del) {
-  DDRB = 0xff;
+
+  //blinks all leds
   
-  PORTB = 0b00000000;
+  PORTB = 0x00;
   delay(del);
-  PORTB = 0b00001111;
+  PORTB = 0x0f;
+}
+
+void enableInputs() {
+
+  //enables the inputs and pullups
+  
+  DDRB = 0xf0;
+  PORTB = 0xff;
+}
+
+void disableInputs() {
+
+  //enables the outputs
+  
+  DDRB = 0xff;
+  PORTB = 0x0f;
+}
+
+byte buttonPressed() {
+
+  //returns the pressed button
+  
+  while(1) {
+    prevInput = PINB & 0x0f;
+    delay(5);
+    
+    //checks whether there was a transition from high to low
+    if(prevInput==0x0f) {
+      switch(PINB & 0x0f) {
+        case 0b00001110:
+          return 0;
+        case 0b00001101:
+          return 1;
+        case 0b00001011:
+          return 2;
+        case 0b00000111:
+          return 3;
+      }
+    }
+  }
 }
 
 void show(byte num) {
-  DDRB = 0xff;
+  
+  //displays a number up to 15
+  
   if(num < 16) {
     byte outputNum;
     byte j=3;
     //flip the first four bits
-    for (byte i=0; i<4; i++ ) {
+    for (byte i=0; i<4; i++) {
       bitWrite(outputNum, i, bitRead(num, j));
       j--;
     }
-    
+    //invert the first four bits
     PORTB = outputNum^0x0f;
   }else {
+    //turn off all leds
     PORTB = 0x0f;
   }
 }
