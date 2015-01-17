@@ -1,13 +1,13 @@
 /********************************************************************
 *
-*   Memory-Game V1.0
+*   Memory-Game V1.1
 *   Florian Ulmschneider
 *   18.01.2015
 *
 ********************************************************************/
 
 
-//#include <Entropy.h>
+#include <Entropy.h>
 #include <avr/power.h>
 
 int turn = 0;
@@ -19,7 +19,7 @@ byte prevInput;
 byte input;
 
 void setup() {
-  //Entropy.initialize();
+  Entropy.initialize();
   
   power_adc_disable();
   power_usi_disable();
@@ -32,11 +32,11 @@ void setup() {
     
     //generate, display and store a random sequence
     for(int i = 0; i <= turn; i++) {
-      randomArray[i] = random(4);
+      randomArray[i] = Entropy.random(4);
       digitalWrite(randomArray[i],0);
       delay(500);
       digitalWrite(randomArray[i],1);
-      delay(100);
+      delay(150);
     }
     
     delay(300);
@@ -44,27 +44,24 @@ void setup() {
     //blink to indicate players turn
     blink(200);
     
-    //look for buttonpresses and store them
+    //look for buttonpresses and compare them to the required ones
     enableInputs();
     for(int i = 0; i <= turn; i++) {
-      inputArray[i] = buttonPressed();
+      if(buttonPressed() != randomArray[i]) {
+        goto gameover;
+      }
       delay(100);
     }
     disableInputs();
     
-    //compare required and actual sequence  
-    for(int i = 0; i < turn; i++) {
-      if(randomArray[i] != inputArray[i]) {
-        goto gameover;
-      }
-    }
     turn++;
     swipe(80);
   }
   
   gameover:
   
-  //display the score in binary  
+  //display the score in binary 
+  disableInputs();
   blink(200);
   delay(100);
   blink(200);
