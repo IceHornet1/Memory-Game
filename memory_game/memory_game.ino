@@ -1,6 +1,6 @@
 /********************************************************************
 *
-*   Memory-Game V1.1
+*   Memory-Game V1.2
 *   Florian Ulmschneider
 *   18.01.2015
 *
@@ -12,8 +12,7 @@
 
 int turn = 0;
 
-byte randomArray[100];
-byte inputArray[100];
+byte randomArray[100]; // stores the random sequence that is generated each turn
 
 byte prevInput;
 byte input;
@@ -26,7 +25,9 @@ void setup() {
  
   disableInputs();
   
-  swipe(80);
+  swipe(60);
+  
+  delay(200);
   
   while(1) {
     
@@ -36,7 +37,7 @@ void setup() {
       digitalWrite(randomArray[i],0);
       delay(500);
       digitalWrite(randomArray[i],1);
-      delay(150);
+      delay(200);
     }
     
     delay(300);
@@ -55,7 +56,8 @@ void setup() {
     disableInputs();
     
     turn++;
-    swipe(80);
+    swipe(60);
+    delay(200);
   }
   
   gameover:
