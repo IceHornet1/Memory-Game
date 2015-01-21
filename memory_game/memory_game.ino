@@ -112,15 +112,15 @@ void enableInputs() {
 
   //enables the inputs and pullups
   
-  DDRB = 0xf0;
-  PORTB = 0xff;
+  DDRB = 0x10;
+  PORTB = 0x1f;
 }
 
 void disableInputs() {
 
   //enables the outputs
   
-  DDRB = 0xff;
+  DDRB = 0x1f;
   PORTB = 0x0f;
 }
 
@@ -129,6 +129,7 @@ byte buttonPressed() {
   //returns the pressed button
   
   while(1) {
+    //set the last 4 bits 0
     prevInput = PINB & 0x0f;
     delay(5);
     
