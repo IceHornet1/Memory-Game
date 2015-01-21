@@ -1,6 +1,6 @@
 /********************************************************************
 *
-*   Memory-Game V1.2
+*   Memory-Game V1.3
 *   Florian Ulmschneider
 *   18.01.2015
 *
@@ -25,9 +25,11 @@ void setup() {
  
   disableInputs();
   
-  swipe(60);
+  delay(500);
   
-  delay(200);
+  swipe(50);
+  
+  delay(500);
   
   while(1) {
     
@@ -40,11 +42,6 @@ void setup() {
       delay(200);
     }
     
-    delay(300);
-    
-    //blink to indicate players turn
-    blink(200);
-    
     //look for buttonpresses and compare them to the required ones
     enableInputs();
     for(int i = 0; i <= turn; i++) {
@@ -56,8 +53,9 @@ void setup() {
     disableInputs();
     
     turn++;
-    swipe(60);
     delay(200);
+    swipe(50);
+    delay(500);
   }
   
   gameover:
