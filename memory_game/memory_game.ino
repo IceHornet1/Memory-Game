@@ -1,6 +1,6 @@
 /********************************************************************
 *
-*   Memory-Game V1.3
+*   Memory-Game V1.4
 *   Florian Ulmschneider
 *   18.01.2015
 *
@@ -17,44 +17,111 @@ byte randomArray[100]; // stores the random sequence that is generated each turn
 byte prevInput;
 byte input;
 
+byte gamemode;
+
 void setup() {
   Entropy.initialize();
   
   power_adc_disable();
   power_usi_disable();
- 
+  
+  //determine gamemode
+  enableInputs();
+  for(int i = 0; i <= 100; i++) {
+    input = PINB & 0x0f;
+  
+    if(input == 0b00001110) {
+      gamemode = 1;
+      break;
+    }else if(input == 0b00001101) {
+      gamemode = 2;
+      break;
+    }else if(input == 0b00001011) {
+      gamemode = 3;
+      break;
+    }else if(input == 0b00000111) {
+      gamemode = 4;
+      break;
+    }else {
+      gamemode = 0;
+    }
+    
+    delay(5);
+  }
   disableInputs();
   
-  delay(500);
+  delay(200);
   
-  swipe(50);
+  if(gamemode == 2 ||gamemode == 3) {
+    swipe(50, 1);
+  }else {
+    swipe(50, 0);
+  }
+  
+  if(gamemode == 4) {
+    enableInputs();
+    randomArray[turn] = buttonPressed();
+    disableInputs();
+    delay(200);
+    swipe(50, 1);
+  }
   
   delay(500);
   
   while(1) {
     
-    //generate, display and store a random sequence
-    for(int i = 0; i <= turn; i++) {
-      randomArray[i] = Entropy.random(4);
-      digitalWrite(randomArray[i],0);
-      delay(500);
-      digitalWrite(randomArray[i],1);
-      delay(200);
+    if(gamemode == 0 || gamemode == 2) {
+      //add a random number
+      randomArray[turn] = Entropy.random(4);
+    }
+    else if(gamemode == 1 || gamemode == 3) {
+      //create new random numbers
+      for(int i = 0; i <= turn; i++) {
+        randomArray[i] = Entropy.random(4);
+      }
+    }
+    if(gamemode != 4) {
+      //generate, display and store a random sequence
+      for(int i = 0; i <= turn; i++) {
+        digitalWrite(randomArray[i],0);
+        delay(500);
+        digitalWrite(randomArray[i],1);
+        delay(200);
+      }
     }
     
     //look for buttonpresses and compare them to the required ones
     enableInputs();
+    int j = turn;
     for(int i = 0; i <= turn; i++) {
-      if(buttonPressed() != randomArray[i]) {
-        goto gameover;
+      if(gamemode == 0 || gamemode == 1 || gamemode == 4) {
+        if(buttonPressed() != randomArray[i]) {
+          goto gameover;
+        }
+      }else if(gamemode == 2 || gamemode == 3) {
+        if(buttonPressed() != randomArray[j]) {
+          goto gameover;
+        }
       }
-      delay(100);
+      delay(10);
+      j--;
+    }
+    
+    turn++;
+    
+    if(gamemode == 4) {
+      randomArray[turn] = buttonPressed();
     }
     disableInputs();
     
-    turn++;
     delay(200);
-    swipe(50);
+    
+    if(gamemode == 2 || gamemode == 3 || (gamemode == 4 && turn % 2 == 0)) {
+      swipe(50, 1);
+    }else {
+      swipe(50, 0);
+    }
+    
     delay(500);
   }
   
@@ -73,28 +140,21 @@ void loop() {
   
 }
 
-void swipe(int del) {
-
-  //lights up the leds from left to right
+void swipe(int del, boolean dir) {
   
   PORTB = 0b00001111;
   delay(del);
-  PORTB = 0b00000111;
-  delay(del);
-  PORTB = 0b00000011;
-  delay(del);
-  PORTB = 0b00001011;
-  delay(del);
-  PORTB = 0b00001001;
-  delay(del);
-  PORTB = 0b00001101;
-  delay(del);
-  PORTB = 0b00001100;
-  delay(del);
-  PORTB = 0b00001110;
-  delay(del);
-  PORTB = 0b00001111;
-  delay(del);
+  
+  for(byte i = 0; i < 5; i++) {
+    if(dir == 0) {
+      //left
+      PORTB = (0b00001000 >> i)^0x0f;
+    }else {
+      //right
+      PORTB = (0b00000001 << i)^0x0f;
+    }
+    delay(del);
+  }
 }
 
 void blink(int del) {
