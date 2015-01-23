@@ -103,7 +103,7 @@ void setup() {
           goto gameover;
         }
       }
-      delay(10);
+      delay(50);
       j--;
     }
     
